@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>マクドナルド・スタバ 3km カバーエリアマップ</title>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'SF Pro JP',
+                   'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      color: #1C1C1E;
+    }
+    #map { width: 100vw; height: 100dvh; }
+
+    /* Apple glass material */
+    .panel {
+      background: rgba(250,250,250,0.72);
+      backdrop-filter: blur(40px) saturate(180%);
+      -webkit-backdrop-filter: blur(40px) saturate(180%);
+      border: 0.5px solid rgba(0,0,0,0.06);
+      box-shadow:
+        0 0 0 0.5px rgba(255,255,255,0.6) inset,
+        0 8px 24px rgba(0,0,0,0.08),
+        0 1px 3px rgba(0,0,0,0.04);
+      border-radius: 14px;
+      animation: panelIn 0.45s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    @keyframes panelIn {
+      from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Header */
+    #header {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+      background: linear-gradient(to bottom, rgba(250,250,250,0.82), rgba(250,250,250,0));
+      padding: max(16px, env(safe-area-inset-top)) 22px 36px;
+      pointer-events: none;
+    }
+    #header h1 {
+      font-size: 15px; font-weight: 600;
+      letter-spacing: -0.32px; color: #1C1C1E;
+    }
+    #header p {
+      font-size: 11px; color: rgba(60,60,67,0.6);
+      margin-top: 3px; letter-spacing: -0.05px;
+    }
+
+    /* Legend */
+    #legend {
+      position: absolute; bottom: 24px; left: 14px;
+      z-index: 10; overflow: hidden; min-width: 230px;
+    }
+    #legend-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 14px 9px; gap: 10px;
+    }
+    #legend-header h3 {
+      font-size: 10.5px; font-weight: 600;
+      letter-spacing: 0.5px; color: rgba(60,60,67,0.45);
+      text-transform: uppercase;
+    }
+    #legend-body { padding: 4px 12px 12px; }
+    .legend-item {
+      display: flex; align-items: center;
+      gap: 10px; padding: 5px 6px; border-radius: 6px;
+      cursor: pointer;
+      transition: opacity 0.18s, background 0.12s;
+      user-select: none;
+    }
+    .legend-item:hover { background: rgba(0,0,0,0.04); }
+    .legend-item.off { opacity: 0.35; }
+    .legend-swatch {
+      width: 12px; height: 12px; border-radius: 3px;
+      flex-shrink: 0;
+      box-shadow: 0 0 0 0.5px rgba(0,0,0,0.08);
+    }
+    .legend-name {
+      font-size: 13px; font-weight: 500; color: #1C1C1E;
+      letter-spacing: -0.15px; line-height: 1.3;
+    }
+    .legend-count {
+      margin-left: auto;
+      font-size: 11px; color: rgba(60,60,67,0.5);
+      font-variant-numeric: tabular-nums;
+    }
+    .legend-divider {
+      height: 1px; background: rgba(60,60,67,0.08);
+      margin: 4px 6px;
+    }
+    .legend-item-sub {
+      display: flex; align-items: center;
+      gap: 10px; padding: 4px 6px;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: opacity 0.18s, background 0.12s;
+      user-select: none;
+    }
+    .legend-item-sub:hover { background: rgba(0,0,0,0.04); }
+    .legend-item-sub.off { opacity: 0.35; }
+    .legend-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 0 0.5px rgba(0,0,0,0.12);
+    }
+    .legend-sub-name {
+      font-size: 11.5px; color: rgba(60,60,67,0.7);
+      letter-spacing: -0.1px;
+    }
+
+    /* MapLibreコントロール */
+    .maplibregl-ctrl-top-left { top: 64px !important; left: 14px !important; }
+    .maplibregl-ctrl-group {
+      background: rgba(250,250,250,0.72) !important;
+      backdrop-filter: blur(40px) saturate(180%) !important;
+      -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+      border: 0.5px solid rgba(0,0,0,0.06) !important;
+      border-radius: 11px !important;
+      box-shadow:
+        0 0 0 0.5px rgba(255,255,255,0.6) inset,
+        0 6px 20px rgba(0,0,0,0.08) !important;
+      overflow: hidden;
+    }
+    .maplibregl-ctrl-group button {
+      width: 38px !important; height: 38px !important;
+      background-color: transparent !important;
+    }
+    .maplibregl-ctrl-group button:hover { background-color: rgba(0,0,0,0.04) !important; }
+    .maplibregl-ctrl-attrib {
+      background: rgba(250,250,250,0.7) !important;
+      backdrop-filter: blur(20px); font-size: 10px !important;
+    }
+
+    /* ポップアップ */
+    .maplibregl-popup { max-width: 280px !important; }
+    .maplibregl-popup-content {
+      background: rgba(250,250,250,0.82) !important;
+      backdrop-filter: blur(40px) saturate(180%) !important;
+      -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+      border: 0.5px solid rgba(0,0,0,0.06) !important;
+      border-radius: 14px !important;
+      box-shadow:
+        0 0 0 0.5px rgba(255,255,255,0.6) inset,
+        0 8px 32px rgba(0,0,0,0.12) !important;
+      padding: 14px 16px !important;
+    }
+    .maplibregl-popup-tip { display: none !important; }
+    .maplibregl-popup-close-button {
+      font-size: 20px !important; font-weight: 300 !important;
+      color: rgba(60,60,67,0.4) !important;
+      padding: 4px 10px !important;
+    }
+    .maplibregl-popup-close-button:hover {
+      background-color: transparent !important;
+      color: rgba(60,60,67,0.85) !important;
+    }
+    .popup-brand {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600; color: #1C1C1E;
+      letter-spacing: -0.2px; margin-bottom: 4px;
+    }
+    .popup-brand-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .popup-addr {
+      font-size: 11.5px; color: rgba(60,60,67,0.6);
+      letter-spacing: -0.1px; line-height: 1.45;
+    }
+
+    /* Loading */
+    #loading {
+      position: absolute; inset: 0; z-index: 100;
+      background: #f5f5f0;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 14px;
+      transition: opacity 0.4s ease-out;
+    }
+    #loading.hidden { opacity: 0; pointer-events: none; }
+    #loading p { font-size: 12.5px; color: rgba(60,60,67,0.6); }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 2.5px solid rgba(0,0,0,0.08);
+      border-top-color: #DA291C; border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 640px) {
+      #header { padding: max(10px, env(safe-area-inset-top)) 14px 24px; }
+      #header h1 { font-size: 14px; }
+      .maplibregl-ctrl-top-left, .maplibregl-ctrl-top-right { display: none !important; }
+      #legend { bottom: max(16px, env(safe-area-inset-bottom)); left: 10px; min-width: 200px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>カバーエリアを読み込み中…</p>
+  </div>
+
+  <div id="map"></div>
+
+  <div id="header">
+    <h1>マクドナルド・スタバ カバーエリアマップ</h1>
+    <p>各店舗から半径 3km のカバーエリア（2025年データ）</p>
+  </div>
+
+  <div id="legend" class="panel">
+    <div id="legend-header">
+      <h3>凡例</h3>
+    </div>
+    <div id="legend-body">
+      <!-- カバーエリア -->
+      <div class="legend-item" id="li-both" onclick="toggleLayer('both')">
+        <div class="legend-swatch" style="background:#8B5CF6;"></div>
+        <span class="legend-name">両方あり</span>
+        <span class="legend-count" id="cnt-both"></span>
+      </div>
+      <div class="legend-item" id="li-mcd-only" onclick="toggleLayer('mcd_only')">
+        <div class="legend-swatch" style="background:#DA291C;"></div>
+        <span class="legend-name">マクドナルドのみ</span>
+        <span class="legend-count" id="cnt-mcd"></span>
+      </div>
+      <div class="legend-item" id="li-sbux-only" onclick="toggleLayer('sbux_only')">
+        <div class="legend-swatch" style="background:#00704A;"></div>
+        <span class="legend-name">スターバックスのみ</span>
+        <span class="legend-count" id="cnt-sbux"></span>
+      </div>
+      <div class="legend-divider"></div>
+      <!-- 店舗ポイント -->
+      <div class="legend-item-sub" id="li-mcd-pts" onclick="toggleLayer('mcd_pts')">
+        <div class="legend-dot" style="background:#DA291C;"></div>
+        <span class="legend-sub-name">マクドナルド店舗</span>
+        <span class="legend-count" id="cnt-mcd-pts"></span>
+      </div>
+      <div class="legend-item-sub" id="li-sbux-pts" onclick="toggleLayer('sbux_pts')">
+        <div class="legend-dot" style="background:#00704A;"></div>
+        <span class="legend-sub-name">スターバックス店舗</span>
+        <span class="legend-count" id="cnt-sbux-pts"></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── カラー定義 ──
+    const COLORS = {
+      both:      { fill: '#8B5CF6', outline: '#7C3AED' },
+      mcd_only:  { fill: '#DA291C', outline: '#B91C1C' },
+      sbux_only: { fill: '#00704A', outline: '#065F46' },
+      mcd_pts:   '#DA291C',
+      sbux_pts:  '#00704A',
+    };
+    const ALPHA = { area: 0.22, outline: 0.55 };
+
+    // 表示フラグ
+    const visible = { both: true, mcd_only: true, sbux_only: true, mcd_pts: true, sbux_pts: true };
+    const layerMap = {
+      both:      ['fill-both', 'outline-both'],
+      mcd_only:  ['fill-mcd-only', 'outline-mcd-only'],
+      sbux_only: ['fill-sbux-only', 'outline-sbux-only'],
+      mcd_pts:   ['pts-mcd'],
+      sbux_pts:  ['pts-sbux'],
+    };
+    const legendIds = {
+      both: 'li-both', mcd_only: 'li-mcd-only', sbux_only: 'li-sbux-only',
+      mcd_pts: 'li-mcd-pts', sbux_pts: 'li-sbux-pts',
+    };
+
+    function toggleLayer(key) {
+      visible[key] = !visible[key];
+      const v = visible[key] ? 'visible' : 'none';
+      layerMap[key].forEach(id => {
+        if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', v);
+      });
+      const el = document.getElementById(legendIds[key]);
+      el.classList.toggle('off', !visible[key]);
+    }
+
+    // ── MapLibre 初期化 ──
+    const map = new maplibregl.Map({
+      container: 'map',
+      style: {
+        version: 8,
+        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+        sources: {
+          osm: {
+            type: 'raster',
+            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            tileSize: 256,
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          },
+        },
+        layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
+      },
+      center: [137.0, 36.5],
+      zoom: 5,
+      minZoom: 3,
+      maxZoom: 16,
+    });
+
+    map.addControl(new maplibregl.NavigationControl(), 'top-left');
+    map.addControl(new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: true } }), 'top-left');
+
+    // ── データ読み込みと描画 ──
+    async function loadAll() {
+      const [bothGJ, mcdGJ, sbuxGJ, mcdPts, sbuxPts] = await Promise.all([
+        fetch('both.geojson').then(r => r.json()),
+        fetch('mcd_only.geojson').then(r => r.json()),
+        fetch('sbux_only.geojson').then(r => r.json()),
+        fetch('mcd_points.geojson').then(r => r.json()),
+        fetch('sbux_points.geojson').then(r => r.json()),
+      ]);
+
+      // カウント表示
+      // ポリゴン面積の比率から店舗数は表示しない → 店舗ポイント数を表示
+      document.getElementById('cnt-mcd-pts').textContent  = mcdPts.features.length.toLocaleString() + '店';
+      document.getElementById('cnt-sbux-pts').textContent = sbuxPts.features.length.toLocaleString() + '店';
+
+      // ソース追加
+      map.addSource('src-both',      { type: 'geojson', data: bothGJ });
+      map.addSource('src-mcd-only',  { type: 'geojson', data: mcdGJ });
+      map.addSource('src-sbux-only', { type: 'geojson', data: sbuxGJ });
+      map.addSource('src-mcd-pts',   { type: 'geojson', data: mcdPts });
+      map.addSource('src-sbux-pts',  { type: 'geojson', data: sbuxPts });
+
+      // ── カバーエリア（fill + outline） ──
+      const areas = [
+        { key: 'both',      src: 'src-both',      color: COLORS.both },
+        { key: 'mcd-only',  src: 'src-mcd-only',  color: COLORS.mcd_only },
+        { key: 'sbux-only', src: 'src-sbux-only',  color: COLORS.sbux_only },
+      ];
+      areas.forEach(({ key, src, color }) => {
+        map.addLayer({
+          id: `fill-${key}`, type: 'fill', source: src,
+          paint: {
+            'fill-color': color.fill,
+            'fill-opacity': ALPHA.area,
+          },
+        });
+        map.addLayer({
+          id: `outline-${key}`, type: 'line', source: src,
+          paint: {
+            'line-color': color.outline,
+            'line-width': 0.8,
+            'line-opacity': ALPHA.outline,
+          },
+        });
+      });
+
+      // ── 店舗ポイント（非表示でスタート: ズームイン時に表示） ──
+      map.addLayer({
+        id: 'pts-mcd', type: 'circle', source: 'src-mcd-pts',
+        layout: { visibility: 'none' },
+        paint: {
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 2.5, 14, 6],
+          'circle-color': COLORS.mcd_pts,
+          'circle-opacity': 0.85,
+          'circle-stroke-width': 1,
+          'circle-stroke-color': '#fff',
+          'circle-stroke-opacity': 0.7,
+        },
+      });
+      map.addLayer({
+        id: 'pts-sbux', type: 'circle', source: 'src-sbux-pts',
+        layout: { visibility: 'none' },
+        paint: {
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 2.5, 14, 6],
+          'circle-color': COLORS.sbux_pts,
+          'circle-opacity': 0.85,
+          'circle-stroke-width': 1,
+          'circle-stroke-color': '#fff',
+          'circle-stroke-opacity': 0.7,
+        },
+      });
+
+      // ズーム8以上でポイント自動表示
+      map.on('zoomend', () => {
+        const z = map.getZoom();
+        const show = z >= 8;
+        if (visible.mcd_pts)  map.setLayoutProperty('pts-mcd',  'visibility', show ? 'visible' : 'none');
+        if (visible.sbux_pts) map.setLayoutProperty('pts-sbux', 'visibility', show ? 'visible' : 'none');
+        // 凡例のトグル状態には影響させない（ズームによる自動ON/OFFは別管理）
+      });
+
+      // ── ポップアップ ──
+      const popup = new maplibregl.Popup({ closeButton: true, closeOnClick: false, maxWidth: '280px' });
+
+      function showPopup(e, brand, dotColor) {
+        const props = e.features[0].properties;
+        const name = props.name || '（名称不明）';
+        const addr = props.address || '';
+        popup
+          .setLngLat(e.lngLat)
+          .setHTML(`
+            <div class="popup-brand">
+              <span class="popup-brand-dot" style="background:${dotColor};"></span>
+              ${name}
+            </div>
+            ${addr ? `<div class="popup-addr">${addr}</div>` : ''}
+          `)
+          .addTo(map);
+      }
+
+      map.on('click', 'pts-mcd',  e => showPopup(e, 'マクドナルド', COLORS.mcd_pts));
+      map.on('click', 'pts-sbux', e => showPopup(e, 'スターバックス', COLORS.sbux_pts));
+      ['pts-mcd', 'pts-sbux'].forEach(id => {
+        map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
+        map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
+      });
+
+      // ローディング非表示
+      document.getElementById('loading').classList.add('hidden');
+    }
+
+    map.on('load', loadAll);
+  </script>
+</body>
+</html>
