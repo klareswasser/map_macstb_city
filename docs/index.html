@@ -476,15 +476,14 @@
       function showPopup(e, brand, dotColor) {
         const props = e.features[0].properties;
         const name = props.name || '（名称不明）';
-        const addr = props.address || '';
         popup
           .setLngLat(e.lngLat)
           .setHTML(`
+            <div style="font-size:11px;color:rgba(60,60,67,0.5);font-weight:500;margin-bottom:4px;letter-spacing:-0.05px;">${brand}</div>
             <div class="popup-brand">
               <span class="popup-brand-dot" style="background:${dotColor};"></span>
               ${name}
             </div>
-            ${addr ? `<div class="popup-addr">${addr}</div>` : ''}
           `)
           .addTo(map);
       }
