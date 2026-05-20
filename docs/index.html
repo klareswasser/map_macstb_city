@@ -361,14 +361,24 @@
     // ── MapLibre 初期化 ──
     const map = new maplibregl.Map({
       container: 'map',
-      style: 'https://tiles.openfreemap.org/styles/positron',
+      style: {
+        version: 8,
+        sources: {
+          osm: {
+            type: 'raster',
+            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            tileSize: 256,
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          },
+        },
+        layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
+      },
       center: [137.0, 36.5],
       zoom: 5,
       minZoom: 3,
       maxZoom: 16,
     });
 
-    map.addControl(new maplibregl.NavigationControl(), 'top-left');
     const geolocate = new maplibregl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
       trackUserLocation: false,
