@@ -194,7 +194,7 @@
     /* Loading */
     #loading {
       position: absolute; inset: 0; z-index: 100;
-      background: #f5f5f0;
+      background: #F2F2F7;
       display: flex; align-items: center; justify-content: center;
       flex-direction: column; gap: 14px;
       transition: opacity 0.3s ease-out;
@@ -204,7 +204,7 @@
     .spinner {
       width: 32px; height: 32px;
       border: 2.5px solid rgba(0,0,0,0.08);
-      border-top-color: #DA291C; border-radius: 50%;
+      border-top-color: #007AFF; border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -283,29 +283,29 @@
     <div id="legend-body">
       <!-- カバーエリア -->
       <div class="legend-item" id="li-both" onclick="toggleLayer('both')">
-        <div class="legend-swatch" style="background:#8B5CF6;"></div>
+        <div class="legend-swatch" style="background:#BF5AF2;"></div>
         <span class="legend-name">両方あり</span>
         <span class="legend-count" id="cnt-both"></span>
       </div>
       <div class="legend-item" id="li-mcd-only" onclick="toggleLayer('mcd_only')">
-        <div class="legend-swatch" style="background:#DA291C;"></div>
+        <div class="legend-swatch" style="background:#FF3B30;"></div>
         <span class="legend-name">マクドナルドのみ</span>
         <span class="legend-count" id="cnt-mcd"></span>
       </div>
       <div class="legend-item" id="li-sbux-only" onclick="toggleLayer('sbux_only')">
-        <div class="legend-swatch" style="background:#00704A;"></div>
+        <div class="legend-swatch" style="background:#34C759;"></div>
         <span class="legend-name">スターバックスのみ</span>
         <span class="legend-count" id="cnt-sbux"></span>
       </div>
       <div class="legend-divider"></div>
       <!-- 店舗ポイント -->
       <div class="legend-item-sub" id="li-mcd-pts" onclick="toggleLayer('mcd_pts')">
-        <div class="legend-dot" style="background:#DA291C;"></div>
+        <div class="legend-dot" style="background:#FF3B30;"></div>
         <span class="legend-sub-name">マクドナルド店舗</span>
         <span class="legend-count" id="cnt-mcd-pts"></span>
       </div>
       <div class="legend-item-sub" id="li-sbux-pts" onclick="toggleLayer('sbux_pts')">
-        <div class="legend-dot" style="background:#00704A;"></div>
+        <div class="legend-dot" style="background:#34C759;"></div>
         <span class="legend-sub-name">スターバックス店舗</span>
         <span class="legend-count" id="cnt-sbux-pts"></span>
       </div>
@@ -326,13 +326,13 @@
   <script>
     // ── カラー定義 ──
     const COLORS = {
-      both:      { fill: '#8B5CF6', outline: '#7C3AED' },
-      mcd_only:  { fill: '#DA291C', outline: '#B91C1C' },
-      sbux_only: { fill: '#00704A', outline: '#065F46' },
-      mcd_pts:   '#DA291C',
-      sbux_pts:  '#00704A',
+      both:      { fill: '#BF5AF2', outline: '#9B30CC' },  // Apple purple
+      mcd_only:  { fill: '#FF3B30', outline: '#D70015' },  // Apple red
+      sbux_only: { fill: '#34C759', outline: '#1D9E3F' },  // Apple green
+      mcd_pts:   '#FF3B30',
+      sbux_pts:  '#34C759',
     };
-    const ALPHA = { area: 0.22, outline: 0.55 };
+    const ALPHA = { area: 0.18, outline: 0.65 };
 
     // 表示フラグ
     const visible = { both: true, mcd_only: true, sbux_only: true, mcd_pts: true, sbux_pts: true };
@@ -361,19 +361,7 @@
     // ── MapLibre 初期化 ──
     const map = new maplibregl.Map({
       container: 'map',
-      style: {
-        version: 8,
-        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
-        sources: {
-          osm: {
-            type: 'raster',
-            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-            tileSize: 256,
-            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-          },
-        },
-        layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
-      },
+      style: 'https://tiles.openfreemap.org/styles/positron',
       center: [137.0, 36.5],
       zoom: 5,
       minZoom: 3,
@@ -440,24 +428,26 @@
         id: 'pts-mcd', type: 'circle', source: 'src-mcd-pts',
         layout: { visibility: 'none' },
         paint: {
-          'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 2.5, 14, 6],
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 4, 14, 9],
           'circle-color': COLORS.mcd_pts,
-          'circle-opacity': 0.85,
-          'circle-stroke-width': 1,
-          'circle-stroke-color': '#fff',
-          'circle-stroke-opacity': 0.7,
+          'circle-opacity': 1,
+          'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 8, 1.5, 14, 2.5],
+          'circle-stroke-color': '#FFFFFF',
+          'circle-stroke-opacity': 1,
+          'circle-pitch-alignment': 'map',
         },
       });
       map.addLayer({
         id: 'pts-sbux', type: 'circle', source: 'src-sbux-pts',
         layout: { visibility: 'none' },
         paint: {
-          'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 2.5, 14, 6],
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 4, 14, 9],
           'circle-color': COLORS.sbux_pts,
-          'circle-opacity': 0.85,
-          'circle-stroke-width': 1,
-          'circle-stroke-color': '#fff',
-          'circle-stroke-opacity': 0.7,
+          'circle-opacity': 1,
+          'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 8, 1.5, 14, 2.5],
+          'circle-stroke-color': '#FFFFFF',
+          'circle-stroke-opacity': 1,
+          'circle-pitch-alignment': 'map',
         },
       });
 
