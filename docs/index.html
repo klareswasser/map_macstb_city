@@ -283,17 +283,17 @@
     <div id="legend-body">
       <!-- カバーエリア -->
       <div class="legend-item" id="li-both" onclick="toggleLayer('both')">
-        <div class="legend-swatch" style="background:#BF5AF2;"></div>
+        <div class="legend-swatch" style="background:#0066FF;"></div>
         <span class="legend-name">両方あり</span>
         <span class="legend-count" id="cnt-both"></span>
       </div>
       <div class="legend-item" id="li-mcd-only" onclick="toggleLayer('mcd_only')">
-        <div class="legend-swatch" style="background:#FF3B30;"></div>
+        <div class="legend-swatch" style="background:#FFC72C;"></div>
         <span class="legend-name">マクドナルドのみ</span>
         <span class="legend-count" id="cnt-mcd"></span>
       </div>
       <div class="legend-item" id="li-sbux-only" onclick="toggleLayer('sbux_only')">
-        <div class="legend-swatch" style="background:#34C759;"></div>
+        <div class="legend-swatch" style="background:#006241;"></div>
         <span class="legend-name">スターバックスのみ</span>
         <span class="legend-count" id="cnt-sbux"></span>
       </div>
@@ -326,13 +326,13 @@
   <script>
     // ── カラー定義 ──
     const COLORS = {
-      both:      { fill: '#BF5AF2', outline: '#9B30CC' },  // Apple purple
-      mcd_only:  { fill: '#FF3B30', outline: '#D70015' },  // Apple red
-      sbux_only: { fill: '#34C759', outline: '#1D9E3F' },  // Apple green
+      both:      { fill: '#0066FF', outline: '#0044CC' },  // blue (overlap)
+      mcd_only:  { fill: '#FFC72C', outline: '#CC9000' },  // McDonald's gold
+      sbux_only: { fill: '#006241', outline: '#004A2F' },  // Starbucks green
       mcd_pts:   '#FFC72C',
       sbux_pts:  '#1E3932',
     };
-    const ALPHA = { area: 0.18, outline: 0.65 };
+    const ALPHA = { area: 0.25, outline: 0.70 };
 
     // 表示フラグ
     const visible = { both: true, mcd_only: true, sbux_only: true, mcd_pts: true, sbux_pts: true };
