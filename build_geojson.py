@@ -27,7 +27,7 @@ DOCS.mkdir(exist_ok=True)
 MCD_CSV  = Path("/Users/hiroki/Library/Mobile Documents/com~apple~CloudDocs/Projects/DB構築/2025_チェーン店_店舗データ/ハンバーガーチェーン/大手チェーン/マクドナルド/data/マクドナルド_260318.csv")
 SBUX_CSV = Path("/Users/hiroki/Library/Mobile Documents/com~apple~CloudDocs/Projects/DB構築/2025_チェーン店_店舗データ/カフェチェーン/スターバックスコーヒー/data/starbucks_stores.csv")
 
-RADIUS_M = 3000  # 3km
+RADIUS_M = 2000  # 2km
 
 # ---- 座標変換ヘルパー ----
 wgs84 = pyproj.CRS("EPSG:4326")
