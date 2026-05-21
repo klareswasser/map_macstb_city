@@ -32,6 +32,15 @@ RADIUS_M = 2000  # 2km
 # ---- 座標変換ヘルパー ----
 wgs84 = pyproj.CRS("EPSG:4326")
 
+# スタバデータは旧日本測地系(Tokyo Datum / EPSG:4301)のため WGS84 に変換
+_tokyo_to_wgs84 = pyproj.Transformer.from_crs("EPSG:4301", "EPSG:4326", always_xy=True)
+
+def tokyo_to_wgs84(lon, lat):
+    """旧日本測地系(EPSG:4301) → WGS84(EPSG:4326)"""
+    lon_w, lat_w = _tokyo_to_wgs84.transform(lon, lat)
+    return lon_w, lat_w
+
+
 def buffer_m(lon, lat, radius_m):
     """WGS84の点に対してメートル単位のバッファを返す（UTM投影使用）"""
     # UTMゾーンを自動選択
@@ -74,6 +83,8 @@ def load_sbux(path):
             try:
                 lat = float(row["latitude"])
                 lon = float(row["longitude"])
+                # APIの座標は旧日本測地系(Tokyo Datum) → WGS84 に変換
+                lon, lat = tokyo_to_wgs84(lon, lat)
                 stores.append({
                     "name": row["name"],
                     "lat": lat,
